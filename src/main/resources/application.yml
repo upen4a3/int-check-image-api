@@ -1,0 +1,100 @@
+security:
+  oauth2:
+    resource:
+      jwt:
+        key-value:
+          -----BEGIN PUBLIC KEY-----
+          MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxviIiVwNBGxpnQB73XiS
+          Qc4QBYYupCs953vwZRSSCq22iXFVo1w2QHr4iWHDX/S8MLvETz+EuH+FYwV5XsPX
+          Ih53Mdqtf80Wjw1tww4me6L0CW4csd3OPdkv0GPtX1Tt0L3Q/yIRJ7iUTqDXKfzr
+          78qhZp5yDZ5UrA+cXzsO1lpZzw2kY91a5felTfdUWYZDr7yMdpLoaLxDttJ1l/aB
+          B99NB+YCWg1z4a4NSKtQbTQFMwislxB3z+7kyQAqvFCM3iRaS3WeYPKK/stOXi8n
+          sRxkasEy6sZkmNhOv9l8a6aUbqquvDE6mBnzYEm3/sOJfk7gwRj6sdi7UleUMwUk
+          IQIDAQAB
+          -----END PUBLIC KEY-----
+  user:
+    name: client
+    password: client
+
+server:
+  compression:
+    enabled: true
+    mime-types: application/json, application/xml, text/html, text/xml, text/plain
+  port: 8410
+  tomcat.accesslog:
+    directory: ${logging.path}
+    enabled: true
+
+camel:
+  dataformat:
+    json-jackson:
+      # Point camel to the mapper created by Spring
+      object-mapper: jacksonObjectMapper
+  springboot:
+    trace-formatter-show-body: true
+    trace-formatter-show-headers: true
+    tracing: false
+
+spring:
+  application:
+    name: d3-transaction-image-api-banking
+  main.banner-mode: "off"
+  mvc:
+    # Disable Spring MVC's favicon support (which is unnecessary in REST-only application services)
+    favicon.enabled: false
+    # Disable Spring MVC's put form filter (which is automatically enabled in spring boot) since its not something we need
+    # See http://blog.codeleak.pl/2011/09/spring-31-httpputformcontentfilter.html
+    formcontent.putfilter.enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: none
+      use-new-id-generator-mappings: true
+    open-in-view: false
+    show-sql: true
+  jackson:
+    serialization:
+      write_dates_as_timestamps: false
+    default-property-inclusion: non_null
+  datasource:
+    url: jdbc:mysql://localhost:3306/${d3.db.name:d3}?useSSL=false
+    username: d3
+    password: d3
+    hikari:
+      maximum-pool-size: 5
+      pool-name: d3-connection-pool
+      connection-timeout: 5000
+      transaction-isolation: TRANSACTION_READ_COMMITTED
+  rabbitmq:
+    addresses: localhost:5672
+    username: d3banking
+    password: d3banking
+  # Disable the "resource mappings"-related endpoints (e.g., welcome page, webjars, etc.) which are unnecessary in
+  # REST-only application services
+  resources.add-mappings: false
+  # Configs in order to register the d3-sb-admin server app
+  boot:
+    admin:
+      url: http://localhost:9099
+      username: admin
+      password: admin
+      client:
+        metadata:
+          # Credentials for the d3-sb-admin app to access actuator's endpoints
+          user:
+            name: ${security.user.name}
+            password: ${security.user.password}
+
+logging:
+  path: ${user.home}/d3/logs/${spring.application.name}
+  file: ${logging.path}/application.log
+
+management:
+  # Disable the `x-application-context` header since it can potentially leak host-related information
+  # See https://stackoverflow.com/questions/40379550/what-is-x-application-context-header
+  add-application-context-header: false
+  # Make sure all the Actuator endpoints under under the `actuator` path so they don't collide with any app endpoints
+  context-path: /actuator
+
+endpoints:
+  # Disable the Actuator trace filter by default since it's fairly expensive
+  trace.filter.enabled: false

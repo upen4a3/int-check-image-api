@@ -1,0 +1,24 @@
+plugins {
+    id 'java'
+}
+
+group 'Training'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+    maven {
+        credentials {
+            username mavenUser
+            password mavenPassword
+        }
+
+        url "https://nexus.d3vcloud.com/nexus/content/groups/public"
+    }
+}
+
+dependencies {
+    compile 'com.d3banking.core:d3-core-api-banking:4.0.+'
+}
